@@ -172,6 +172,15 @@ openerp.web.callback = function(obj, method) {
         return callback;
     };
 
+    //remove callbacks based on either exact reference or same code - convenient
+    //when we're busy with anonymous functions
+    callback.removeCode = function(f) {
+        callback.callback_chain = _.difference(callback.callback_chain, _.filter(callback.callback_chain, function(el) {
+            return el.callback === f || el.callback.toString() == f.toString();
+        }));
+        return callback;
+    }
+ 
     return callback.add({
         callback: method,
         self:obj,

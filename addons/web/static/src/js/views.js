@@ -144,6 +144,10 @@ session.web.ActionManager = session.web.OldWidget.extend({
                     this.dialog.on_close.add(on_close);
             } else {
                 this.dialog_viewmanager.stop();
+                if(on_close) {
+                    this.dialog.on_close.removeCode(on_close);
+                    this.dialog.on_close.add(on_close);
+                }
             }
             this.dialog.dialog_title = action.name;
             this.dialog_viewmanager = new session.web.ViewManagerAction(this, action);
