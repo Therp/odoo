@@ -606,7 +606,8 @@ openerp.web.ListView = openerp.web.View.extend( /** @lends openerp.web.ListView#
             c.add(action.context);
         }
         action.context = c;
-        this.do_execute_action(action, this.dataset, id, callback);
+        this.do_execute_action(
+            action, this.dataset, id, _.bind(callback, null, id));
     },
     /**
      * Handles the activation of a record (clicking on it)
@@ -869,8 +870,8 @@ openerp.web.ListView.List = openerp.web.Class.extend( /** @lends openerp.web.Lis
                 // of digits, nice when storing actual numbers, not nice when
                 // storing strings composed only of digits. Force the action
                 // name to be a string
-                $(self).trigger('action', [field.toString(), record_id, function () {
-                    return self.reload_record(self.records.get(record_id));
+                $(self).trigger('action', [field.toString(), record_id, function (id) {
+                    return self.reload_record(self.records.get(id));
                 }]);
             })
             .delegate('a', 'click', function (e) {
