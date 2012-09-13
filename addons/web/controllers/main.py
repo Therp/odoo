@@ -1620,7 +1620,8 @@ class Export(View):
 
             if len(name.split('/')) < 3 and 'relation' in field:
                 ref = field.pop('relation')
-                record['value'] += '/id'
+                if import_compat:
+                    record['value'] += '/id'
                 record['params'] = {'model': ref, 'prefix': id, 'name': name}
 
                 if not import_compat or field['type'] == 'one2many':
