@@ -542,9 +542,16 @@ class expression(object):
                     call_null_m2m = True
                     if right is not False:
                         if isinstance(right, basestring):
-                            res_ids = [x[0] for x in field_obj.name_search(cr, uid, right, [], operator, context=context)]
-                            if res_ids:
+                            negative_map = {'not ilike': 'ilike',
+                                            'not like': 'like',
+                                            '!=': '='}
+                            if operator in negative_map:
+                                local_operator = negative_map[operator]
+                                operator = 'not in'
+                            else:
+                                local_operator = operator
                                 operator = 'in'
+                            res_ids = [x[0] for x in field_obj.name_search(cr, uid, right, [], local_operator, context=context)]
                         else:
                             if not isinstance(right, list):
                                 res_ids = [right]
@@ -556,11 +563,12 @@ class expression(object):
                                 call_null_m2m = False
                                 self.__exp[i] = FALSE_LEAF
                             else:
-                                operator = 'in' # operator changed because ids are directly related to main object
+                                call_null_m2m = False
+                                self.__exp[i] = TRUE_LEAF
                         else:
                             call_null_m2m = False
                             m2m_op = 'not in' if operator in NEGATIVE_TERM_OPERATORS else 'in'
-                            self.__exp[i] = ('id', m2m_op, select_from_where(cr, rel_id1, rel_table, rel_id2, res_ids, operator) or [0])
+                            self.__exp[i] = ('id', m2m_op, select_from_where(cr, rel_id1, rel_table, rel_id2, res_ids, "in") or [0])
 
                     if call_null_m2m:
                         m2m_op = 'in' if operator in NEGATIVE_TERM_OPERATORS else 'not in'
