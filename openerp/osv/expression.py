@@ -152,6 +152,7 @@ TERM_OPERATORS = ('=', '!=', '<=', '<', '>', '>=', '=?', '=like', '=ilike',
 # below, this doesn't necessarily mean that any of those NEGATIVE_TERM_OPERATORS is
 # legal in the processed term.
 NEGATIVE_TERM_OPERATORS = ('!=', 'not like', 'not ilike', 'not in')
+REVERSE_NEGATIVE_OPERATOR = {'!=': '=', 'not like': 'like', 'not ilike': 'ilike', 'not in': 'in'}
 
 TRUE_LEAF = (1, '=', 1)
 FALSE_LEAF = (0, '=', 1)
@@ -461,8 +462,13 @@ class expression(object):
                     self.__exp[i] = (field_path[0], 'in', right)
                 # Making search easier when there is a left operand as field.o2m or field.m2m
                 if field._type in ['many2many', 'one2many']:
-                    right = field_obj.search(cr, uid, [(field_path[1], operator, right)], context=context)
-                    right1 = table.search(cr, uid, [(field_path[0],'in', right)], context=dict(context, active_test=False))
+                    local_operator = REVERSE_NEGATIVE_OPERATOR.get(operator, operator)
+                    right = field_obj.search(cr, uid, [(field_path[1], local_operator, right)], context=context)
+                    if operator in REVERSE_NEGATIVE_OPERATOR:
+                        ids_operator = 'not in'
+                    else:
+                        ids_operator = 'in'
+                    right1 = table.search(cr, uid, [(field_path[0], ids_operator, right)], context=dict(context, active_test=False))
                     self.__exp[i] = ('id', 'in', right1)
 
                 if not isinstance(field, fields.property):
@@ -542,11 +548,8 @@ class expression(object):
                     call_null_m2m = True
                     if right is not False:
                         if isinstance(right, basestring):
-                            negative_map = {'not ilike': 'ilike',
-                                            'not like': 'like',
-                                            '!=': '='}
-                            if operator in negative_map:
-                                local_operator = negative_map[operator]
+                            if operator in REVERSE_NEGATIVE_OPERATOR:
+                                local_operator = REVERSE_NEGATIVE_OPERATOR[operator]
                                 operator = 'not in'
                             else:
                                 local_operator = operator
