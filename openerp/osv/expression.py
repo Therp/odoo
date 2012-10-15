@@ -153,6 +153,10 @@ TERM_OPERATORS = ('=', '!=', '<=', '<', '>', '>=', '=?', '=like', '=ilike',
 # legal in the processed term.
 NEGATIVE_TERM_OPERATORS = ('!=', 'not like', 'not ilike', 'not in')
 REVERSE_NEGATIVE_OPERATOR = {'!=': '=', 'not like': 'like', 'not ilike': 'ilike', 'not in': 'in'}
+def get_ids_operator(operator):
+    if operator in NEGATIVE_TERM_OPERATORS:
+        return 'not in'
+    return 'in'
 
 TRUE_LEAF = (1, '=', 1)
 FALSE_LEAF = (0, '=', 1)
@@ -464,10 +468,7 @@ class expression(object):
                 if field._type in ['many2many', 'one2many']:
                     local_operator = REVERSE_NEGATIVE_OPERATOR.get(operator, operator)
                     right = field_obj.search(cr, uid, [(field_path[1], local_operator, right)], context=context)
-                    if operator in REVERSE_NEGATIVE_OPERATOR:
-                        ids_operator = 'not in'
-                    else:
-                        ids_operator = 'in'
+                    ids_operator = get_ids_operator(operator)
                     right1 = table.search(cr, uid, [(field_path[0], ids_operator, right)], context=dict(context, active_test=False))
                     self.__exp[i] = ('id', 'in', right1)
 
@@ -504,13 +505,11 @@ class expression(object):
                     self.__exp = self.__exp[:i] + dom + self.__exp[i+1:]
 
                 else:
-                    call_null = True
-
                     if right is not False:
                         if isinstance(right, basestring):
-                            ids2 = [x[0] for x in field_obj.name_search(cr, uid, right, [], operator, context=context, limit=None)]
-                            if ids2:
-                                operator = 'in'
+                            local_operator = REVERSE_NEGATIVE_OPERATOR.get(operator, operator)
+                            operator = get_ids_operator(operator)
+                            ids2 = [x[0] for x in field_obj.name_search(cr, uid, right, [], local_operator, context=context, limit=None)]
                         else:
                             if not isinstance(right, list):
                                 ids2 = [right]
@@ -519,15 +518,13 @@ class expression(object):
                         if not ids2:
                             if operator in ['like','ilike','in','=']:
                                 #no result found with given search criteria
-                                call_null = False
                                 self.__exp[i] = FALSE_LEAF
+                            else:
+                                self.__exp[i] = TRUE_LEAF
                         else:
-                            ids2 = select_from_where(cr, field._fields_id, field_obj._table, 'id', ids2, operator)
-                            if ids2:
-                                call_null = False
-                                self.__exp[i] = ('id', 'in', ids2)
-
-                    if call_null:
+                            ids2 = select_from_where(cr, field._fields_id, field_obj._table, 'id', ids2, "in")
+                            self.__exp[i] = ('id', operator, ids2)
+                    else:
                         o2m_op = 'in' if operator in NEGATIVE_TERM_OPERATORS else 'not in'
                         self.__exp[i] = ('id', o2m_op, select_distinct_from_where_not_null(cr, field._fields_id, field_obj._table))
 
@@ -545,15 +542,10 @@ class expression(object):
                     ids2 = field_obj.search(cr, uid, dom, context=context)
                     self.__exp[i] = ('id', 'in', _rec_convert(ids2))
                 else:
-                    call_null_m2m = True
                     if right is not False:
                         if isinstance(right, basestring):
-                            if operator in REVERSE_NEGATIVE_OPERATOR:
-                                local_operator = REVERSE_NEGATIVE_OPERATOR[operator]
-                                operator = 'not in'
-                            else:
-                                local_operator = operator
-                                operator = 'in'
+                            local_operator = REVERSE_NEGATIVE_OPERATOR.get(operator, operator)
+                            operator = get_ids_operator(operator)
                             res_ids = [x[0] for x in field_obj.name_search(cr, uid, right, [], local_operator, context=context)]
                         else:
                             if not isinstance(right, list):
@@ -563,17 +555,13 @@ class expression(object):
                         if not res_ids:
                             if operator in ['like','ilike','in','=']:
                                 #no result found with given search criteria
-                                call_null_m2m = False
                                 self.__exp[i] = FALSE_LEAF
                             else:
-                                call_null_m2m = False
                                 self.__exp[i] = TRUE_LEAF
                         else:
-                            call_null_m2m = False
-                            m2m_op = 'not in' if operator in NEGATIVE_TERM_OPERATORS else 'in'
+                            m2m_op = get_ids_operator(operator)
                             self.__exp[i] = ('id', m2m_op, select_from_where(cr, rel_id1, rel_table, rel_id2, res_ids, "in") or [0])
-
-                    if call_null_m2m:
+                    else:
                         m2m_op = 'in' if operator in NEGATIVE_TERM_OPERATORS else 'not in'
                         self.__exp[i] = ('id', m2m_op, select_distinct_from_where_not_null(cr, rel_id1, rel_table))
 
