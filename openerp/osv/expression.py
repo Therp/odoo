@@ -644,6 +644,13 @@ class expression(object):
                                     SELECT id
                                       FROM "{table}"
                                      WHERE "{left}" {operator} {right}
+                                     AND id NOT IN (
+                                         SELECT res_id FROM ir_translation
+                                         WHERE name = %s AND lang = %s
+                                             AND type = 'model'
+                                             AND value is not NULL
+                                             AND value != ''
+                                         )
                                    )
                                 """.format(left=left, operator=sql_operator,
                                            right=instr, table=working_table._table)
@@ -654,6 +661,8 @@ class expression(object):
                         'model',
                         right,
                         right,
+                        working_table._name + ',' + left,
+                        context.get('lang') or 'en_US',
                     )
                     self.__exp[i] = ('id', inselect_operator, (subselect, params))
 
