@@ -634,25 +634,23 @@ class expression(object):
                     if sql_operator == 'in':
                         instr = '(%s)' % ', '.join(['%s'] * len(right))
 
-                    subselect = """(SELECT res_id
-                                      FROM ir_translation
-                                     WHERE name = %s
-                                       AND lang = %s
-                                       AND type = %s
-                                       AND value {operator} {right}
-                                   ) UNION (
-                                    SELECT id
-                                      FROM "{table}"
-                                     WHERE "{left}" {operator} {right}
-                                   )
-                                """.format(left=left, operator=sql_operator,
-                                           right=instr, table=working_table._table)
+                    subselect = """WITH temp_irt_current (id, name) as (
+                            SELECT ct.id, coalesce(it.value,ct."{left}")
+                            FROM {current_table} ct 
+                            LEFT JOIN ir_translation it ON (it.name = %s and 
+                                        it.lang = %s and 
+                                        it.type = %s and 
+                                        it.res_id = ct.id and 
+                                        it.value != '')
+                            ) 
+                            SELECT id FROM temp_irt_current WHERE name {operator} {right} order by name
+                            """.format(current_table=working_table._table, left=left,
+                                       operator=sql_operator, right=instr)
 
                     params = (
                         working_table._name + ',' + left,
                         context.get('lang') or 'en_US',
                         'model',
-                        right,
                         right,
                     )
                     self.__exp[i] = ('id', inselect_operator, (subselect, params))
