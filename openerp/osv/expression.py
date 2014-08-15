@@ -624,46 +624,37 @@ class expression(object):
                         right = '%%%s%%' % right
 
                     inselect_operator = 'inselect'
-                    if operator in NEGATIVE_TERM_OPERATORS:
+                    if sql_operator in NEGATIVE_TERM_OPERATORS:
                         # negate operator (fix lp:1071710)
-                        operator = operator[4:] if operator[:3] == 'not' else '='
+                        sql_operator = sql_operator[4:] if sql_operator[:3] == 'not' else '='
                         inselect_operator = 'not inselect'
 
-                    subselect = '( SELECT res_id'          \
-                             '    FROM ir_translation'  \
-                             '   WHERE name = %s'       \
-                             '     AND lang = %s'       \
-                             '     AND type = %s'
-                    instr = ' %s'
+                    instr = '%s'
                     #Covering in,not in operators with operands (%s,%s) ,etc.
                     if sql_operator == 'in':
-                        instr = ','.join(['%s'] * len(right))
-                        subselect += '     AND value ' + sql_operator +  ' ' +" (" + instr + ")"   \
-                             ') UNION ('                \
-                             '  SELECT id'              \
-                             '    FROM "' + working_table._table + '"'       \
-                             '   WHERE "' + left + '" ' + sql_operator + ' ' +" (" + instr + "))"
-                    else:
-                        if self.has_unaccent and sql_operator in ('ilike', 'not ilike'):
-                            subselect += '     AND unaccent(value) ' + sql_operator + ' unaccent(' + instr +   \
-                                 ')) UNION ('                \
-                                 '  SELECT id'              \
-                                 '    FROM "' + working_table._table + '"'       \
-                                 '   WHERE unaccent("' + left + '") ' + sql_operator + ' unaccent(' + instr + '))'
-                        else:
-                            subselect += '     AND value ' + sql_operator + instr +   \
-                                 ') UNION ('                \
-                                 '  SELECT id'              \
-                                 '    FROM "' + working_table._table + '"'       \
-                                 '   WHERE "' + left + '" ' + sql_operator + instr + ")"
+                        instr = '(%s)' % ', '.join(['%s'] * len(right))
 
-                    params = [working_table._name + ',' + left,
-                              context.get('lang', False) or 'en_US',
-                              'model',
-                              right,
-                              right,
-                             ]
+                    subselect = """(SELECT res_id
+                                      FROM ir_translation
+                                     WHERE name = %s
+                                       AND lang = %s
+                                       AND type = %s
+                                       AND value {operator} {right}
+                                   ) UNION (
+                                    SELECT id
+                                      FROM "{table}"
+                                     WHERE "{left}" {operator} {right}
+                                   )
+                                """.format(left=left, operator=sql_operator,
+                                           right=instr, table=working_table._table)
 
+                    params = (
+                        working_table._name + ',' + left,
+                        context.get('lang') or 'en_US',
+                        'model',
+                        right,
+                        right,
+                    )
                     self.__exp[i] = ('id', inselect_operator, (subselect, params))
 
     def __leaf_to_sql(self, leaf, table):
