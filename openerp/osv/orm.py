@@ -2782,15 +2782,18 @@ class BaseModel(object):
                     _schema.debug("Table '%s': dropping obsolete FK constraint: '%s'",
                                   source_table, cons['constraint_name'])
                     self._drop_constraint(cr, source_table, cons['constraint_name'])
-                    self._m2o_add_foreign_key_checked(source_field, dest_model, ondelete)
-                # else it's all good, nothing to do!
+                else:
+                    # it's all good, nothing to do!
+                    return 
             else:
                 # Multiple FKs found for the same field, drop them all, and re-create
                 for cons in constraints:
                     _schema.debug("Table '%s': dropping duplicate FK constraints: '%s'",
                                   source_table, cons['constraint_name'])
                     self._drop_constraint(cr, source_table, cons['constraint_name'])
-                self._m2o_add_foreign_key_checked(source_field, dest_model, ondelete)
+
+        # (re-)create the FK
+        self._m2o_add_foreign_key_checked(source_field, dest_model, ondelete)
 
 
 
