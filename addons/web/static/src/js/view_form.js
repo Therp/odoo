@@ -181,7 +181,9 @@ openerp.web.FormView = openerp.web.View.extend( /** @lends openerp.web.FormView#
         this.$element.removeClass('oe_form_dirty');
         return this.has_been_loaded.pipe(function() {
             var result;
-            if (self.dataset.index === null) {
+            // index can be -1 if this is an embedded, empty one2many widget that is
+            // initialized in page view
+            if (self.dataset.index === null || self.dataset.index === -1) {
                 // null index means we should start a new record
                 result = self.on_button_new();
             } else {
