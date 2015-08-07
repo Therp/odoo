@@ -40,6 +40,10 @@ from lxml.builder import E
 
 _logger = logging.getLogger(__name__)
 
+
+# Only users who can modify the user (incl. the user herself) see the real contents of these fields
+USER_PRIVATE_FIELDS = ['password']
+
 class groups(osv.osv):
     _name = "res.groups"
     _description = "Access Groups"
@@ -293,6 +297,10 @@ class users(osv.osv):
         def override_password(o):
             if 'password' in o and ( 'id' not in o or o['id'] != uid ):
                 o['password'] = '********'
+            if ('id' not in o or o['id'] != uid):
+                for f in USER_PRIVATE_FIELDS:
+                    if f in o:
+                        o[f] = '********'
             return o
         result = super(users, self).read(cr, uid, ids, fields, context, load)
         canwrite = self.pool.get('ir.model.access').check(cr, uid, 'res.users', 'write', False)
