@@ -1269,7 +1269,8 @@ class stock_picking(models.Model):
         # Go through all remaining reserved quants and group by product, package, owner, source location and dest location
         # Lots will go into pack operation lot object
         for quant, dest_location_id in quants_suggested_locations.items():
-            key = (quant.product_id.id, quant.package_id.id, quant.owner_id.id, quant.location_id.id, dest_location_id)
+            key = (quant.product_id.id, quant.package_id.id, quant.owner_id.id,
+                   quant.location_id.id, dest_location_id, quant)
             if qtys_grouped.get(key):
                 qtys_grouped[key] += quant.qty
             else:
