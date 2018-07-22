@@ -29,7 +29,6 @@ class AccountCommonReport(models.TransientModel):
         result['state'] = 'target_move' in data['form'] and data['form']['target_move'] or ''
         result['date_from'] = data['form']['date_from'] or False
         result['date_to'] = data['form']['date_to'] or False
-        result['strict_range'] = True if result['date_from'] else False
         result['company_id'] = data['form']['company_id'][0] or False
         return result
 
