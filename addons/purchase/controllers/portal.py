@@ -74,7 +74,12 @@ class CustomerPortal(CustomerPortal):
         # make pager
         pager = portal_pager(
             url="/my/purchase",
-            url_args={'date_begin': date_begin, 'date_end': date_end},
+            url_args={
+                "date_begin": date_begin,
+                "date_end": date_end,
+                "filterby": filterby,
+                "sortby": sortby,
+            },
             total=purchase_count,
             page=page,
             step=self._items_per_page
