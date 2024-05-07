@@ -258,6 +258,12 @@ class AccountEdiXmlUBLBIS3(models.AbstractModel):
         vals['currency_dp'] = 2
         vals['price_vals']['currency_dp'] = 2
 
+        if line.currency_id.compare_amounts(vals['price_vals']['price_amount'], 0) == -1:
+            # We can't have negative unit prices, so we invert the signs of
+            # the unit price and quantity, resulting in the same amount in the end
+            vals['price_vals']['price_amount'] *= -1
+            vals['invoiced_quantity'] *= -1
+
         return vals
 
     def _export_invoice_vals(self, invoice):
