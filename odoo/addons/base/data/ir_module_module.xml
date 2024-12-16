@@ -20,7 +20,6 @@
             <field name="name">timesheet_grid</field>
             <field name="shortdesc">Timesheets</field>
             <field name="sequence">65</field>
-            <field name="category_id" ref="base.module_category_services_timesheets"/>
             <field name="application" eval="True"/>
             <field name="summary">Track time &amp; costs</field>
             <field name="license">OEEL-1</field>
@@ -76,7 +75,6 @@
             <field name="name">marketing_automation</field>
             <field name="shortdesc">Marketing Automation</field>
             <field name="sequence">195</field>
-            <field name="category_id" ref="base.module_category_marketing_email_marketing"/>
             <field name="application" eval="True"/>
             <field name="summary">Build automated mailing campaigns</field>
             <field name="license">OEEL-1</field>
@@ -89,7 +87,6 @@
         <record model="ir.module.module" id="base.module_mrp_plm">
             <field name="name">mrp_plm</field>
             <field name="shortdesc">Product Lifecycle Management (PLM)</field>
-            <field name="category_id" ref="base.module_category_manufacturing_manufacturing"/>
             <field name="sequence">155</field>
             <field name="application" eval="True"/>
             <field name="summary">PLM, ECOs, Versions</field>
@@ -104,7 +101,6 @@
             <field name="name">quality_control</field>
             <field name="shortdesc">Quality</field>
             <field name="sequence">120</field>
-            <field name="category_id" ref="base.module_category_manufacturing_manufacturing"/>
             <field name="application" eval="True"/>
             <field name="summary">Quality Alerts, Control Points</field>
             <field name="license">OEEL-1</field>
@@ -118,7 +114,6 @@
             <field name="name">sale_ebay</field>
             <field name="shortdesc">eBay Connector</field>
             <field name="sequence">325</field>
-            <field name="category_id" ref="base.module_category_sales_sales"/>
             <field name="application" eval="True"/>
             <field name="summary">Sell on eBay easily</field>
             <field name="license">OEEL-1</field>
@@ -132,7 +127,6 @@
             <field name="name">planning</field>
             <field name="shortdesc">Planning</field>
             <field name="sequence">130</field>
-            <field name="category_id" ref="base.module_category_services_project"/>
             <field name="application" eval="True"/>
             <field name="summary">Manage your employees' schedule</field>
             <field name="license">OEEL-1</field>
@@ -146,7 +140,6 @@
             <field name="name">sale_subscription</field>
             <field name="shortdesc">Subscriptions</field>
             <field name="sequence">115</field>
-            <field name="category_id" ref="base.module_category_sales_sales"/>
             <field name="application" eval="True"/>
             <field name="summary">MRR, Churn, Recurring payments</field>
             <field name="license">OEEL-1</field>
@@ -174,7 +167,6 @@
             <field name="name">stock_barcode</field>
             <field name="shortdesc">Barcode</field>
             <field name="sequence">255</field>
-            <field name="category_id" ref="base.module_category_inventory_inventory"/>
             <field name="application" eval="True"/>
             <field name="summary">Barcode scanner for warehouses</field>
             <field name="license">OEEL-1</field>
@@ -202,7 +194,6 @@
             <field name="name">website_calendar</field>
             <field name="shortdesc">Appointments</field>
             <field name="sequence">215</field>
-            <field name="category_id" ref="base.module_category_sales_sales"/>
             <field name="application" eval="True"/>
             <field name="summary">Online appointments scheduler</field>
             <field name="license">OEEL-1</field>
@@ -216,7 +207,6 @@
             <field name="name">mrp_workorder</field>
             <field name="sequence">16</field>
             <field name="shortdesc">MRP II</field>
-            <field name="category_id" ref="base.module_category_manufacturing_manufacturing"/>
             <field name="application" eval="True"/>
             <field name="summary">Work Orders, Planning, Routing</field>
             <field name="license">OEEL-1</field>
@@ -244,7 +234,6 @@
             <field name="name">website_twitter_wall</field>
             <field name="shortdesc">Twitter Wall</field>
             <field name="summary">Interactive twitter wall for events</field>
-            <field name="category_id" ref="base.module_category_website_website"/>
             <field name="license">OEEL-1</field>
             <field name="author">Odoo S.A.</field>
             <field name="to_buy" eval="True"/>
@@ -255,7 +244,6 @@
             <field name="name">payment_sepa_direct_debit</field>
             <field name="shortdesc">Sepa Direct Debit Payment Acquirer</field>
             <field name="summary">Checkout with SEPA Direct Debit</field>
-            <field name="category_id" ref="base.module_category_accounting_accounting"/>
             <field name="license">OEEL-1</field>
             <field name="author">Odoo S.A.</field>
             <field name="to_buy" eval="True"/>
@@ -263,3 +251,4 @@
         </record>
     </data>
 </odoo>
+
