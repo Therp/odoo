@@ -272,6 +272,20 @@ class MrpProduction(models.Model):
         string='Date Category', store=False,
         search='_search_date_category', readonly=True
     )
+    lot_ids = fields.Many2many(
+        'stock.lot',
+        'mrp_production_lot_rel',
+        'production_id',
+        'lot_id',
+        string='Pre-generated Serials',
+        copy=False,
+        help="Serial/Lot numbers pre-generated for this MO. Used to prefill the Batch Produce wizard.",
+    )
+
+    lot_serial_count = fields.Integer(
+        string="Generated Serials",
+        compute="_compute_lot_serial_count",
+    )
 
     _sql_constraints = [
         ('name_uniq', 'unique(name, company_id)', 'Reference must be unique per Company!'),
@@ -339,6 +353,11 @@ class MrpProduction(models.Model):
                 fallback_loc = self.env['stock.warehouse'].search([('company_id', '=', company_id)], limit=1).lot_stock_id
             production.location_src_id = production.picking_type_id.default_location_src_id.id or fallback_loc.id
             production.location_dest_id = production.picking_type_id.default_location_dest_id.id or fallback_loc.id
+    
+    @api.depends("lot_ids")
+    def _compute_lot_serial_count(self):
+        for mo in self:
+            mo.lot_serial_count = len(mo.lot_ids)
 
     @api.model
     def _search_components_availability_state(self, operator, value):
@@ -1142,6 +1161,24 @@ class MrpProduction(models.Model):
             if production.bom_id:
                 production._link_bom(production.bom_id)
         self.is_outdated_bom = False
+    
+    def action_view_pregenerated_serials(self):
+        self.ensure_one()
+        action = self.env["ir.actions.actions"]._for_xml_id("stock.action_production_lot_form")
+        action["domain"] = [("id", "in", self.lot_ids.ids)]
+        action["context"] = {}
+        return action
+
+    def action_open_generate_serials_wizard(self):
+        self.ensure_one()
+        return {
+            "type": "ir.actions.act_window",
+            "name": _("Generate Serials"),
+            "res_model": "mrp.generate.serials",
+            "view_mode": "form",
+            "target": "new",
+            "context": {"active_id": self.id},
+        }
 
     def _get_bom_values(self, ratio=1):
         """ Returns the BoM lines, by-products and operations values needed to

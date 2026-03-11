@@ -14,6 +14,36 @@ class MrpBatchProduct(models.TransientModel):
     _name = 'mrp.batch.produce'
     _description = 'Produce a batch of production order'
 
+    @api.model
+    def default_get(self, fields_list):
+        # fill pre-generated serials
+        vals = super().default_get(fields_list)
+        active_id = self.env.context.get("active_id")
+        if not active_id:
+            active_ids = self.env.context.get("active_ids") or []
+            active_id = active_ids[0] if active_ids else False
+        if not active_id:
+            return vals
+        mo = self.env["mrp.production"].browse(active_id)
+        if not mo.exists():
+            return vals
+        if mo.product_id.tracking != "serial":
+            return vals
+        if mo.lot_ids:
+            lots = mo.lot_ids.sorted(key=lambda l: l.name)
+            lot_names = lots.mapped("name")
+        # only full order
+        if len(lot_names) != int(mo.product_qty):
+            raise UserError(
+                _("This MO has %(n)s pre-generated serials but quantity is %(q)s. "
+                  "Generate exactly one serial per unit (or adjust the MO quantity).")
+                % {"n": len(lot_names), "q": mo.product_qty}
+            )
+        vals["production_text"] = "\n".join(lot_names)
+        vals["lot_qty"] = len(lot_names)
+        vals["lot_name"] = lot_names[0]
+        return vals
+
     production_id = fields.Many2one('mrp.production', 'Production')
 
     production_text_help = fields.Text('Explanation for batch production', compute='_compute_production_text_help')

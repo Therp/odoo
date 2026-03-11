@@ -218,11 +218,31 @@
                     <field name="is_planned" invisible="1"/>
                     <field name="show_allocation" invisible="1"/>
                     <field name="workorder_ids" invisible="1"/>
+                    <field name="lot_serial_count" invisible="1"/>
                     <div class="oe_button_box" name="button_box">
                         <button name="action_view_reception_report" string="Allocation" type="object"
                             class="oe_stat_button" icon="fa-list"
                             invisible="not show_allocation"
                             groups="mrp.group_mrp_reception_report"/>
+                        <button class="oe_stat_button"
+                            name="action_open_generate_serials_wizard"
+                            type="object"
+                            icon="fa-hashtag"
+                            invisible="product_tracking != 'serial' or not product_qty or state in ('done','cancel')">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_text">Generate Serials</span>
+                            </div>
+                        </button>
+                        <button class="oe_stat_button"
+                            name="action_view_pregenerated_serials"
+                            type="object"
+                            icon="fa-barcode"
+                            invisible="lot_serial_count == 0">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_value"><field name="lot_serial_count"/></span>
+                                <span class="o_stat_text">Serials</span>
+                            </div>
+                        </button>
                         <button class="oe_stat_button" name="action_view_mrp_production_childs" type="object" icon="fa-wrench" invisible="mrp_production_child_count == 0">
                             <div class="o_field_widget o_stat_info">
                                 <span class="o_stat_value"><field name="mrp_production_child_count"/></span>
