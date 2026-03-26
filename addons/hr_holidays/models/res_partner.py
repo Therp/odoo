@@ -10,12 +10,18 @@ class ResPartner(models.Model):
     def _compute_im_status(self):
         super(ResPartner, self)._compute_im_status()
         absent_now = self._get_on_leave_ids()
+        # see what super did to cache
+        base_status_by_id = {
+            partner.id: partner._cache.get('im_status') or 'offline'
+            for partner in self
+        }
         for partner in self:
+            # fetch the cached value for recomputing
+            base_status = base_status_by_id[partner.id]
             if partner.id in absent_now:
-                if partner.im_status == 'online':
-                    partner.im_status = 'leave_online'
-                else:
-                    partner.im_status = 'leave_offline'
+                partner.im_status = 'leave_online' if base_status == 'online' else 'leave_offline'
+            else:
+                partner.im_status = base_status
 
     @api.model
     def _get_on_leave_ids(self):
