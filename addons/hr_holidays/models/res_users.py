@@ -2,8 +2,7 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from odoo import api, fields, models
-import logging
-_logger = logging.getLogger(__name__)
+
 
 class User(models.Model):
     _inherit = "res.users"
@@ -43,7 +42,6 @@ class User(models.Model):
         return init_res
 
     def _compute_im_status(self):
-        _logger.warning("USER IM STATUS START ids=%s", self.ids)
         super(User, self)._compute_im_status()
         on_leave_user_ids = set(self._get_on_leave_ids())
         base_status_by_id = {
@@ -53,10 +51,6 @@ class User(models.Model):
         for user in self:
             base_status = base_status_by_id[user.id]
             final_status = 'leave_online' if base_status == 'online' else 'leave_offline' if user.id in on_leave_user_ids else base_status
-            _logger.warning(
-                "USER IM STATUS user=%s base=%s on_leave=%s final=%s",
-                user.id, base_status, user.id in on_leave_user_ids, final_status,
-            )
             user.im_status = final_status
 
     @api.model

@@ -2,16 +2,12 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
 from odoo import api, models
-import logging
-
-_logger = logging.getLogger(__name__)
 
 
 class ResPartner(models.Model):
     _inherit = 'res.partner'
 
     def _compute_im_status(self):
-        _logger.warning("PARTNER IM STATUS START ids=%s", self.ids)
         super(ResPartner, self)._compute_im_status()
         absent_now = set(self._get_on_leave_ids())
         # see what super did to cache
@@ -30,13 +26,6 @@ class ResPartner(models.Model):
                 )
             else:
                 final_status = base_status
-            _logger.warning(
-                "PARTNER IM STATUS partner=%s base=%s on_leave=%s final=%s",
-                partner.id,
-                base_status,
-                partner.id in absent_now,
-                final_status,
-            )
             partner.im_status = final_status
 
     @api.model
