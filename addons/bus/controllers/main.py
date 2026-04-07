@@ -1,8 +1,13 @@
 # -*- coding: utf-8 -*-
 
+import logging
+import os
+
 from odoo import exceptions, _
 from odoo.http import Controller, request, route
 from odoo.addons.bus.models.bus import dispatch
+
+_logger = logging.getLogger(__name__)
 
 
 class BusController(Controller):
@@ -41,4 +46,45 @@ class BusController(Controller):
 
     @route('/longpolling/im_status', type="json", auth="user")
     def im_status(self, partner_ids):
-        return request.env['res.partner'].with_context(active_test=False).search([('id', 'in', partner_ids)]).read(['im_status'])
+        Partner = request.env['res.partner'].with_context(active_test=False)
+        current_user = request.env.user
+        try:
+            return Partner.search([('id', 'in', partner_ids)]).read(['im_status'])
+        except ValueError as err:
+            _logger.exception(
+                "IM STATUS batch failure: user_id=%s login=%s user_partner_id=%s "
+                "partner_ids=%s db=%s pid=%s context=%s error=%r",
+                current_user.id,
+                current_user.login,
+                current_user.partner_id.id,
+                partner_ids,
+                request.db,
+                os.getpid(),
+                dict(request.env.context),
+                err,
+            )
+            failing_ids = []
+            successful_rows = []
+            for partner_id in partner_ids:
+                try:
+                    row = Partner.browse(partner_id).read(['im_status'])[0]
+                    successful_rows.append(row)
+                except Exception:
+                    failing_ids.append(partner_id)
+                    _logger.exception(
+                        "IM STATUS single failure: user_id=%s login=%s "
+                        "user_partner_id=%s failing_partner_id=%s db=%s pid=%s",
+                        current_user.id,
+                        current_user.login,
+                        current_user.partner_id.id,
+                        partner_id,
+                        request.db,
+                        os.getpid(),
+                    )
+            if failing_ids:
+                _logger.warning(
+                    "IM STATUS fallback applied: failing_ids=%s successful_rows=%s",
+                    failing_ids,
+                    successful_rows,
+                )
+            return successful_rows + [{'id': pid, 'im_status': 'offline'} for pid in failing_ids]
